@@ -4,15 +4,21 @@ import chess.svg
 import subprocess
 import os
 import time
+from stockfish import Stockfish
 
 
 class ChessEnvironment:
     def __init__(self):
         self.board = chess.Board()
         self.svg_frames = []
+        self.engine = Stockfish("stockfish/stockfish-ubuntu-x86-64")
+        self.engine.set_depth(10)
+        self.done = False
 
     def reset(self):
         self.board.reset()
+        self.svg_frames = []
+        self.done = False
         return self.board.fen()
 
     def step(self, move):
@@ -26,12 +32,12 @@ class ChessEnvironment:
                 reward = -1.0  # Black wins
             else:
                 reward = 0.0  # Draw
-            done = True
+            self.done = True
         else:
             reward = 0.0
-            done = False
+            self.done = False
 
-        return self.board.fen(), reward, done
+        return self.board.fen(), reward, self.done
 
     def legal_moves(self):
         return list(self.board.legal_moves)
@@ -41,9 +47,11 @@ class ChessEnvironment:
         return move
 
     def engine_move(self):
-        result = self.engine.play(self.board, chess.engine.Limit(time=2.0))
-        move = result.move
+        self.engine.set_fen_position(self.board.fen())
+        best_move = self.engine.get_best_move()
+        move = chess.Move.from_uci(best_move)
         return move
+
 
     def render(self):
         print(self.board)
@@ -53,8 +61,11 @@ class ChessEnvironment:
         self.svg_frames.append(svg)
 
         if done:
-            # Create the frames directory if it doesn't exist
-            if not os.path.exists(directory):
+            # if folder exists, delete the contents
+            if os.path.exists(directory):
+                for file in os.listdir(directory):
+                    os.remove(os.path.join(directory, file))
+            else:    
                 os.makedirs(directory)
 
             # Save each SVG frame to a separate file
@@ -66,40 +77,24 @@ class ChessEnvironment:
     def create_animation(self, frames_directory, output_filename, delay=100):
         # Convert SVG frames to PNG
         subprocess.run(['convert', '-delay', str(delay), f'{frames_directory}/*.svg', output_filename])
-
-if __name__ == "__main__":
-   
-    env = ChessEnvironment()
-
-    # time how long it takes to play a game
     
+if __name__ == "__main__":
+    env = ChessEnvironment()
     start = time.time()
 
-    # play multiple games
-    for j in range(1000):
-
-
+    i = 0
+    for j in range(2):
         state = env.reset()
-        # env.render()
         done = False
-        i = 0
         while not done:
-            i += 1
-            move = env.random_move()
+            # move = env.random_move()
+            move = env.engine_move()
             next_state, reward, done = env.step(move)
-
             state = next_state
-
-            # env.render()
-            # env.save_game_frames(f'frames_{i}')
-
-        
-
-        
-
-        # Create an animated GIF from the SVG frames
-        # env.create_animation('frames_{i}', "game_{i}.gif", delay=100)
-
+            env.save_game_frames(f'frames_{j}')
+            if reward != 0.0:
+                i += 1
+        # env.create_animation(f'frames_{j}', f'game_{j}.gif', delay=100)
     end = time.time()
-    # print with format
+    print(f'{i} games won in {j+1} games')
     print(f"{j+1} Games took: {end - start} seconds")
