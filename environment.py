@@ -60,7 +60,7 @@ class ChessEnvironment:
         svg = chess.svg.board(board=self.board)
         self.svg_frames.append(svg)
 
-        if done:
+        if self.done:
             # if folder exists, delete the contents
             if os.path.exists(directory):
                 for file in os.listdir(directory):

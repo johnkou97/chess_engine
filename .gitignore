@@ -1,9 +1,13 @@
 __pycache__
 
-utils/
-
 frames*
 
+game*
+
+*.pgn
+
 *.gif
+
+*.json
 
 stockfish/
