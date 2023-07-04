@@ -2,6 +2,7 @@ import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
 from environment import ChessEnvironment
 from model import ChessNet
 from helper import move_to_input, result_to_target
@@ -42,11 +43,14 @@ model = ChessNet()
 criterion = nn.MSELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-num_epochs = 1
+num_epochs = 20
 
 # Train the network
 for epoch in range(num_epochs):
+    
     running_loss = 0.0
+    loss_list = []
+
     for input_tensor, target_tensor in zip(input_data, target_data):
         # Zero the gradients
         optimizer.zero_grad()
@@ -65,8 +69,19 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item()
 
+    # save running loss over each epoch
+    loss_list.append(running_loss)
+
+
     # Print the loss for this epoch
     print(f"Epoch {epoch+1} Loss: {running_loss}")
+
+# Create a simple plot of loss vs epoch
+plt.plot(loss_list)
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.savefig("loss.png")
+
 
 # Save the trained model
 torch.save(model.state_dict(), "chess_net.pth")   
