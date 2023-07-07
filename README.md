@@ -15,6 +15,6 @@ This is a chess engine that uses supervised learning to play chess. It is writte
 
 ## Usage
 
-Run `create_dataset.py` to create a dataset of chess board positions. This dataset is used to train the neural network model. Then, run `train.py` to train the neural network model. Finally, run `evaluate.py` to evaluate the performance of the neural network model.
+Run `create_dataset.py` to create a dataset of chess board positions. This dataset is used to train the neural network model. Then, run `train.py` to train the neural network model. Finally, run `evaluate.py` to evaluate the performance of the neural network model. You also need to download the [stockfish](https://stockfishchess.org/) engine and give its path to `environment.py`. 
 
 
