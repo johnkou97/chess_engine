@@ -5,14 +5,16 @@ import subprocess
 import os
 import time
 from stockfish import Stockfish
+import torch
 
 
 class ChessEnvironment:
-    def __init__(self):
+    def __init__(self, stockfish_depth=10):
         self.board = chess.Board()
         self.svg_frames = []
         self.engine = Stockfish("stockfish/stockfish-ubuntu-x86-64")
-        self.engine.set_depth(10)
+        self.depth = stockfish_depth
+        self.engine.set_depth(self.depth)
         self.done = False
 
     def reset(self):
@@ -78,6 +80,24 @@ class ChessEnvironment:
         # Convert SVG frames to PNG
         subprocess.run(['convert', '-delay', str(delay), f'{frames_directory}/*.svg', output_filename])
     
+    def get_fen_tensor(self):
+        fen = self.board.fen().split()[0]  # Extract FEN string without additional information
+        fen_tensor = torch.zeros(1, 64)
+
+        piece_symbols = {
+            'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
+            'p': -1, 'n': -2, 'b': -3, 'r': -4, 'q': -5, 'k': -6,
+        }
+
+        for i, char in enumerate(fen):
+            if char.isalpha():
+                piece_value = piece_symbols[char]
+                fen_tensor[0, i] = piece_value
+
+        return fen_tensor
+
+
+
 if __name__ == "__main__":
     env = ChessEnvironment()
     start = time.time()
